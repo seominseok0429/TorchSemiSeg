@@ -241,12 +241,16 @@ with Engine(custom_parser=parser) as engine:
             loss_sup = criterion(sup_pred_l, gts)
             loss_sup_r = criterion(sup_pred_r, gts)
             
+            sup_pred_l_tmp = copy.deepcopy(sup_pred_l_tmp)
+            sup_pred_r_tmp = copy.deepcopy(sup_pred_r_tmp)
+ 
             loss_sup_tmp = copy.deepcopy(loss_sup)
             loss_sup_r_tmp = copy.deepcopy(loss_sup_r)
             
             change_rate = 1-my_abs(loss_sup_tmp.item(), loss_sup_r_tmp.item())
+            entropy_rate = 1-my_kld(sup_pred_l.detach().item(), sup_pred_r.detach().item())
             
-            total_loss = (loss_sup*change_rate + loss_sup_r + change_rate)/2.
+            total_loss = (loss_sup*((change_rate+entropy_rate)/2.) + loss_sup_r*((change_rate+entropy_rate))/2)/2.
             
             
             dist.all_reduce(loss_sup, dist.ReduceOp.SUM)
