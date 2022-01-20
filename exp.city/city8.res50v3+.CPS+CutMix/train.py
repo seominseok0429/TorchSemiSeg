@@ -239,10 +239,20 @@ with Engine(custom_parser=parser) as engine:
             _, sup_pred_r = model(imgs, step=2)
 
             loss_sup = criterion(sup_pred_l, gts)
+            loss_sup_r = criterion(sup_pred_r, gts)
+            
+            loss_sup_tmp = copy.deepcopy(loss_sup)
+            loss_sup_r_tmp = copy.deepcopy(loss_sup_r)
+            
+            change_rate = 1-my_abs(loss_sup_tmp.item(), loss_sup_r_tmp.item())
+            
+            total_loss = (loss_sup*change_rate + loss_sup_r + change_rate)/2.
+            
+            
             dist.all_reduce(loss_sup, dist.ReduceOp.SUM)
             loss_sup = loss_sup / engine.world_size
 
-            loss_sup_r = criterion(sup_pred_r, gts)
+            
             dist.all_reduce(loss_sup_r, dist.ReduceOp.SUM)
             loss_sup_r = loss_sup_r / engine.world_size
             current_idx = epoch * config.niters_per_epoch + idx
