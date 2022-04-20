@@ -218,9 +218,14 @@ with Engine(custom_parser=parser) as engine:
             # It makes no difference whether we do this with logits or probabilities as
             # the mask pixels are either 1 or 0
             logits_cons_tea_1 = logits_u0_tea_1 * (1 - batch_mix_masks) + logits_u1_tea_1 * batch_mix_masks
-            _, ps_label_1 = torch.max(logits_cons_tea_1, dim=1)
+            ps_conf, ps_label_1 = torch.max(logits_cons_tea_1, dim=1)
             ps_label_1 = ps_label_1.long()
+            
+            f_conf = F.relu(ps_label_1 - source[:,:,ps_label_1])
+            
             logits_cons_tea_2 = logits_u0_tea_2 * (1 - batch_mix_masks) + logits_u1_tea_2 * batch_mix_masks
+            
+            
             _, ps_label_2 = torch.max(logits_cons_tea_2, dim=1)
             ps_label_2 = ps_label_2.long()
 
